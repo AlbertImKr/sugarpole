@@ -10,8 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cornerstonejs/core": "^3.10.27",
+    "@cornerstonejs/dicom-image-loader": "^3.10.27",
+    "@cornerstonejs/nifti-volume-loader": "^3.10.27",
+    "@cornerstonejs/tools": "^3.10.27",
+    "@tailwindcss/vite": "^4.1.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.1.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
