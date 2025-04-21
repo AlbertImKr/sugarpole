@@ -4,12 +4,12 @@
 
 ## 기술 스택
 
-- yarn
 - React 19.0.0 (함수형 컴포넌트)
 - TypeScript
 - Tailwind CSS
 - Cornerstone.js/Cornerstone3D v1.86
 - Vite 6.3.1
+- Yarn
 
 ## 주요 기능
 
