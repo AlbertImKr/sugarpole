@@ -1,14 +1,31 @@
 import React from "react";
 
-const MenuItem: React.FC<{ text: string }> = ({ text }) => {
+interface MenuItemProps {
+  text: string;
+  active?: boolean;
+  onClick?: () => void;
+}
+
+const MenuItem: React.FC<MenuItemProps> = ({ text, active, onClick }) => {
   return (
-    <button className="flex items-center justify-center px-2 py-3 bg-transparent border-none cursor-pointer font-roboto font-medium text-base leading-[100%] text-[#21272A]">
+    <button
+      className={`flex items-center justify-center px-2 py-3 bg-transparent border-none cursor-pointer font-roboto font-medium text-base leading-[100%] ${active ? "text-[#0F62FE] font-bold" : "text-[#21272A]"}`}
+      onClick={onClick}
+    >
       {text}
     </button>
   );
 };
 
-const ControlBar: React.FC = () => {
+interface ControlBarProps {
+  activeMode: string;
+  setActiveMode: (mode: string) => void;
+}
+
+const ControlBar: React.FC<ControlBarProps> = ({
+  activeMode,
+  setActiveMode,
+}) => {
   return (
     <div className="w-[1440px] h-[116px] mx-auto pt-4 pr-10 pb-4 pl-[30px] flex items-center gap-12 bg-white">
       <div
@@ -22,9 +39,11 @@ const ControlBar: React.FC = () => {
 
       <div className="w-[1014px] h-auto max-h-[48px] flex items-center gap-6 self-center justify-between">
         <div className="flex items-center w=[649px] gap-4">
-          <button className="flex items-center justify-center px-2 py-3 bg-transparent border-none cursor-pointer font-roboto font-medium text-base leading-[100%] text-[#21272A] ml-[7px]">
-            Zoom
-          </button>
+          <MenuItem
+            text="Zoom"
+            active={activeMode === "zoom"}
+            onClick={() => setActiveMode(activeMode === "zoom" ? "" : "zoom")}
+          />
           <MenuItem text="Flip H" />
           <MenuItem text="Flip V" />
           <MenuItem text="Rotate Delta 30" />
