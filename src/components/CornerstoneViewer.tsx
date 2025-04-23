@@ -199,7 +199,6 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
 
         viewport.render();
         console.log("플립 작업 후 카메라 상태:", viewport.getCamera());
-        setActiveMode("zoom");
       } catch (error) {
         console.error(`${direction} 플립 처리 중 오류:`, error);
       }
@@ -226,6 +225,20 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
   );
 
   /**
+   * 뷰포트 반전 조작
+   */
+  const handleInvert = useCallback(() => {
+    console.log("<UNK> <UNK> <UNK> <UNK>:", id);
+    if (viewport && activeViewerId == id) {
+      const invert = viewport.getProperties().invert;
+      viewport.setProperties({
+        invert: !invert,
+      });
+      viewport.render();
+    }
+  }, [viewport, activeViewerId, id]);
+
+  /**
    * 도구 활성화 관리
    */
   const updateActiveTool = useCallback(() => {
@@ -248,18 +261,28 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
           if (activeViewerId === id) {
             handleFlip("horizontal");
           }
+          setActiveMode("zoom");
           break;
 
         case "flipV":
           if (activeViewerId === id) {
             handleFlip("vertical");
           }
+          setActiveMode("zoom");
           break;
 
         case "rotate30":
           if (activeViewerId === id) {
             handleRotate(30);
           }
+          setActiveMode("zoom");
+          break;
+
+        case "invert":
+          if (activeViewerId === id) {
+            handleInvert();
+          }
+          setActiveMode("zoom");
           break;
 
         default:
