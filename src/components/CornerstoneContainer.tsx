@@ -1,16 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
 import CornerstoneViewer from "./CornerstoneViewer";
+import ControlBar from "./ControlBar.tsx";
 
 const CornerstoneContainer: React.FC = () => {
+  const [activeMode, setActiveMode] = useState("");
+  const [activeViewerId, setActiveViewerId] = useState<string>("viewerLeft");
+
   return (
-    <div className="w-[1440px] h-[903px] mx-auto pt-4 pr-10 pb-4 pl-[30px] flex justify-between">
-      <div className="w-auto max-w-[720px] h-[903px] ">
-        <CornerstoneViewer />
+    <>
+      <ControlBar activeMode={activeMode} setActiveMode={setActiveMode} />
+      <div className="w-[1440px] h-[903px] flex justify-between mx-auto">
+        <div className="w-[720px] h-[903px]">
+          <CornerstoneViewer
+            id="viewerLeft"
+            activeMode={activeMode}
+            setActiveMode={setActiveMode}
+            activeViewerId={activeViewerId}
+            setActiveViewerId={setActiveViewerId}
+          />
+        </div>
+        <div className="w-[715px] h-[903px]">
+          <CornerstoneViewer
+            id="viewerRight"
+            activeMode={activeMode}
+            setActiveMode={setActiveMode}
+            activeViewerId={activeViewerId}
+            setActiveViewerId={setActiveViewerId}
+          />
+        </div>
       </div>
-      <div className="w-auto max-w-[715px] h-[903px] ">
-        <CornerstoneViewer />
-      </div>
-    </div>
+    </>
   );
 };
 
