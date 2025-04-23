@@ -44,8 +44,14 @@ const ControlBar: React.FC<ControlBarProps> = ({
             active={activeMode === "zoom"}
             onClick={() => setActiveMode(activeMode === "zoom" ? "" : "zoom")}
           />
-          <MenuItem text="Flip H" />
-          <MenuItem text="Flip V" />
+          <MenuItem
+            text="Flip H"
+            onClick={() => setActiveMode(activeMode === "flipH" ? "" : "flipH")}
+          />
+          <MenuItem
+            text="Flip V"
+            onClick={() => setActiveMode(activeMode === "flipV" ? "" : "flipV")}
+          />
           <MenuItem text="Rotate Delta 30" />
           <MenuItem text="Invert" />
           <MenuItem text="Apply Colormap" />
