@@ -14,6 +14,7 @@
 - GitHub Actions CI
 
 ## 버전 관련 참고사항
+
 초기에는 Cornerstone.js/Cornerstone3D v1.86을 사용하려 했으나 구현 과정에서 어려움이 있었습니다. 렌더링 관련 문제로 인해 최종적으로 Cornerstone3D v3.10.27 버전을
 사용하게 되었습니다.
 
