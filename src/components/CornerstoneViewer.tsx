@@ -175,7 +175,6 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
           ],
         });
       } else if (activeMode === "flipH" && activeViewerId === id) {
-        // 수평 뒤집기 도구 활성화
         if (!viewport) return;
         const flipHorizontal = viewport.getCamera().flipHorizontal;
         console.log("<UNK> <UNK>:", viewport.getCamera());
@@ -185,7 +184,6 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
         viewport.render();
         setActiveMode("zoom");
       } else if (activeMode === "flipV" && activeViewerId === id) {
-        // 수직 뒤집기 도구 활성화
         if (!viewport) return;
         const flipVertical = viewport.getCamera().flipVertical;
         console.log("<UNK> <UNK>:", viewport.getCamera());
@@ -194,6 +192,13 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
         });
         viewport.render();
         setActiveMode("zoom");
+      } else if (activeMode === "rotate30" && activeViewerId === id) {
+        if (!viewport) return;
+        const rotation = viewport.getViewPresentation().rotation ?? 0;
+        viewport.setViewPresentation({
+          rotation: rotation + 30,
+        });
+        viewport.render();
       } else {
         // 기본적으로 윈도우 레벨링 활성화
         toolGroup.setToolActive(WindowLevelTool.toolName, {
