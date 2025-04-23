@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
   Enums,
   getRenderingEngine,
@@ -36,182 +36,243 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
   const [viewport, setViewport] = useState<StackViewport | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const toolGroupId = `toolGroup-${id}`;
+  const viewportId = `viewport-${id}`;
+  const renderingEngineId = `renderingEngine-${id}`;
 
-  // Cornerstone 라이브러리 초기화
-  useEffect(() => {
-    if (!isInitialized) {
-      try {
-        // 라이브러리 초기화
-        coreInit();
-        dicomImageLoaderInit();
-        toolsInit();
+  /**
+   * Cornerstone 라이브러리 초기화
+   */
+  const initializeCornerstone = useCallback(async () => {
+    if (isInitialized) return;
 
-        // 필요한 도구만 등록
-        addTool(ZoomTool);
-        addTool(WindowLevelTool);
-        addTool(StackScrollTool);
+    try {
+      // 라이브러리 초기화
+      coreInit();
+      dicomImageLoaderInit();
+      toolsInit();
 
-        setIsInitialized(true);
-      } catch (error) {
-        console.error("Cornerstone 초기화 오류:", error);
-      }
+      // 필요한 도구 등록
+      addTool(ZoomTool);
+      addTool(WindowLevelTool);
+      addTool(StackScrollTool);
+
+      setIsInitialized(true);
+      console.log("Cornerstone 초기화 완료");
+    } catch (error) {
+      console.error("Cornerstone 초기화 오류:", error);
     }
   }, [isInitialized]);
 
-  // 뷰포트 설정
-  useEffect(() => {
-    // 초기화가 완료되지 않았거나 컨테이너가 없으면 중단
-    if (!isInitialized || !containerRef.current) return;
-
-    let renderingEngine: RenderingEngine | null = null;
-    const viewportId = `viewport-${id}`;
-
-    const setupViewport = async () => {
-      try {
-        // 기존 렌더링 엔진 제거
-        try {
-          const existingEngine = getRenderingEngine(`renderingEngine-${id}`);
-          if (existingEngine) {
-            existingEngine.destroy();
-          }
-        } catch (e) {
-          console.error("기존 렌더링 엔진 제거 오류:", e);
-        }
-
-        // DICOM 이미지 경로 배열 생성
-        const imageIds = Array.from(
-          { length: 41 },
-          (_, i) =>
-            `wadouri:/dicoms/image-${i.toString().padStart(5, "0")}.dcm`,
-        );
-
-        // 새 렌더링 엔진 생성
-        renderingEngine = new RenderingEngine(`renderingEngine-${id}`);
-
-        // 뷰포트 활성화
-        renderingEngine.enableElement({
-          viewportId,
-          element: containerRef.current!,
-          type: Enums.ViewportType.STACK,
-        });
-
-        // 뷰포트 설정
-        const viewport = renderingEngine.getViewport(viewportId);
-        if (viewport instanceof StackViewport) {
-          await viewport.setStack(imageIds, 20);
-          viewport.resetCamera();
-          viewport.render();
-
-          // 도구 그룹 설정
-          try {
-            // 새 도구 그룹 생성
-            const toolGroup = ToolGroupManager.createToolGroup(toolGroupId)!;
-            toolGroup.addViewport(viewportId, renderingEngine.id);
-
-            // 기본 도구 추가
-            toolGroup.addTool(ZoomTool.toolName);
-            toolGroup.addTool(WindowLevelTool.toolName);
-            toolGroup.addTool(StackScrollTool.toolName);
-            console.log("도구 그룹 생성:", toolGroup);
-          } catch (error) {
-            console.error("도구 그룹 설정 오류:", error);
-          }
-          setViewport(viewport);
-        }
-      } catch (error) {
-        console.error("뷰포트 설정 오류:", error);
+  /**
+   * 기존 렌더링 엔진 제거
+   */
+  const cleanupRenderingEngine = useCallback(() => {
+    try {
+      // 도구 그룹 제거
+      if (ToolGroupManager.getToolGroup(toolGroupId)) {
+        ToolGroupManager.destroyToolGroup(toolGroupId);
       }
-    };
 
-    (async () => {
-      await setupViewport();
-    })();
-
-    // 클린업
-    return () => {
+      // 렌더링 엔진 제거
       try {
-        // 도구 그룹 제거
-        if (ToolGroupManager.getToolGroup(toolGroupId)) {
-          ToolGroupManager.destroyToolGroup(toolGroupId);
-        }
-
-        // 렌더링 엔진 제거
-        if (renderingEngine) {
-          renderingEngine.destroy();
-        } else {
-          try {
-            const engine = getRenderingEngine(`renderingEngine-${id}`);
-            if (engine) engine.destroy();
-          } catch (e) {
-            console.error("렌더링 엔진 제거 오류:", e);
-          }
-        }
+        const engine = getRenderingEngine(renderingEngineId);
+        if (engine) engine.destroy();
       } catch (e) {
-        console.log("정리 중 오류:", e);
+        console.error("렌더링 엔진 제거 오류:", e);
       }
-    };
-  }, [id, toolGroupId, isInitialized]);
+    } catch (e) {
+      console.log("정리 중 오류:", e);
+    }
+  }, [toolGroupId, renderingEngineId]);
 
-  // 도구 변경 처리
-  useEffect(() => {
-    const toolGroupRef = ToolGroupManager.getToolGroup(toolGroupId)!;
-    if (!isInitialized || !activeMode || !toolGroupRef) return;
-    console.log("도구 변경:", activeMode);
+  /**
+   * DICOM 이미지 경로 배열 생성
+   */
+  const createImageIds = useCallback(() => {
+    return Array.from(
+      { length: 41 },
+      (_, i) => `wadouri:/dicoms/image-${i.toString().padStart(5, "0")}.dcm`,
+    );
+  }, []);
+
+  /**
+   * 도구 그룹 생성 및 설정
+   */
+  const setupToolGroup = useCallback(
+    (viewportId: string, renderingEngineId: string) => {
+      try {
+        // 새 도구 그룹 생성
+        const toolGroup = ToolGroupManager.createToolGroup(toolGroupId)!;
+        toolGroup.addViewport(viewportId, renderingEngineId);
+
+        // 기본 도구 추가
+        toolGroup.addTool(ZoomTool.toolName);
+        toolGroup.addTool(WindowLevelTool.toolName);
+        toolGroup.addTool(StackScrollTool.toolName);
+
+        console.log("도구 그룹 생성 완료:", toolGroup);
+        return toolGroup;
+      } catch (error) {
+        console.error("도구 그룹 설정 오류:", error);
+        return null;
+      }
+    },
+    [toolGroupId],
+  );
+
+  /**
+   * 뷰포트 설정
+   */
+  const setupViewport = useCallback(async () => {
+    if (!isInitialized || !containerRef.current) return null;
 
     try {
-      const toolGroup = toolGroupRef;
-      console.log("<UNK> <UNK>:", toolGroup);
-      if (!toolGroup) return;
+      // 기존 인스턴스 정리
+      cleanupRenderingEngine();
 
-      // 기본 도구 설정
-      if (activeMode === "zoom") {
-        console.log("Zoom 도구 활성화");
-        // 확대/축소 도구 활성화
-        toolGroup.setToolActive(ZoomTool.toolName, {
-          bindings: [
-            {
-              mouseButton: ToolEnums.MouseBindings.Primary,
-            },
-          ],
-        });
-      } else if (activeMode === "flipH" && activeViewerId === id) {
-        // 수평 뒤집기 도구 활성화
-        if (!viewport) return;
-        const flipHorizontal = viewport.getCamera().flipHorizontal;
-        console.log("<UNK> <UNK>:", viewport.getCamera());
-        viewport.setCamera({
-          flipHorizontal: !flipHorizontal,
-        });
+      // 이미지 ID 생성
+      const imageIds = createImageIds();
+
+      // 새 렌더링 엔진 생성
+      const renderingEngine = new RenderingEngine(renderingEngineId);
+
+      // 뷰포트 활성화
+      renderingEngine.enableElement({
+        viewportId,
+        element: containerRef.current,
+        type: Enums.ViewportType.STACK,
+      });
+
+      // 뷰포트 설정
+      const viewportInstance = renderingEngine.getViewport(viewportId);
+      if (viewportInstance instanceof StackViewport) {
+        await viewportInstance.setStack(imageIds, 20);
+        viewportInstance.resetCamera();
+        viewportInstance.render();
+
+        // 도구 그룹 설정
+        setupToolGroup(viewportId, renderingEngine.id);
+
+        return viewportInstance;
+      }
+      return null;
+    } catch (error) {
+      console.error("뷰포트 설정 오류:", error);
+      return null;
+    }
+  }, [
+    isInitialized,
+    cleanupRenderingEngine,
+    createImageIds,
+    setupToolGroup,
+    viewportId,
+    renderingEngineId,
+  ]);
+
+  /**
+   * 뷰포트 플립 조작 (수평/수직)
+   */
+  const handleFlip = useCallback(
+    (direction: "horizontal" | "vertical") => {
+      if (!viewport || activeViewerId !== id) return;
+
+      try {
+        const camera = viewport.getCamera();
+        console.log("현재 카메라 상태:", camera);
+
+        // 직접 플립 값 지정
+        if (direction === "horizontal") {
+          const currentFlip = camera.flipHorizontal || false;
+          console.log("수평 플립 변경:", currentFlip, "→", !currentFlip);
+
+          viewport.setCamera({
+            flipHorizontal: !currentFlip,
+          });
+        } else {
+          const currentFlip = camera.flipVertical || false;
+          console.log("수직 플립 변경:", currentFlip, "→", !currentFlip);
+
+          viewport.setCamera({
+            flipVertical: !currentFlip,
+          });
+        }
+
         viewport.render();
+        console.log("플립 작업 후 카메라 상태:", viewport.getCamera());
         setActiveMode("zoom");
-      } else if (activeMode === "flipV" && activeViewerId === id) {
-        // 수직 뒤집기 도구 활성화
-        if (!viewport) return;
-        const flipVertical = viewport.getCamera().flipVertical;
-        console.log("<UNK> <UNK>:", viewport.getCamera());
-        viewport.setCamera({
-          flipVertical: !flipVertical,
-        });
-        viewport.render();
-        setActiveMode("zoom");
-      } else {
-        // 기본적으로 윈도우 레벨링 활성화
-        toolGroup.setToolActive(WindowLevelTool.toolName, {
-          bindings: [
-            {
-              mouseButton: ToolEnums.MouseBindings.Primary,
-            },
-          ],
-        });
+      } catch (error) {
+        console.error(`${direction} 플립 처리 중 오류:`, error);
+      }
+    },
+    [viewport, activeViewerId, id, setActiveMode],
+  );
+
+  /**
+   * 뷰포트 회전 조작
+   */
+  const handleRotate = useCallback(
+    (degrees: number) => {
+      if (!viewport || activeViewerId !== id) return;
+
+      const presentation = viewport.getViewPresentation();
+      const currentRotation = presentation.rotation ?? 0;
+      viewport.setViewPresentation({
+        ...presentation,
+        rotation: currentRotation + degrees,
+      });
+      viewport.render();
+    },
+    [viewport, activeViewerId, id],
+  );
+
+  /**
+   * 도구 활성화 관리
+   */
+  const updateActiveTool = useCallback(() => {
+    if (!isInitialized || !activeMode) return;
+
+    const toolGroup = ToolGroupManager.getToolGroup(toolGroupId);
+    if (!toolGroup) return;
+
+    try {
+      // 활성 도구 설정
+      switch (activeMode) {
+        case "zoom":
+          console.log("Zoom 도구 활성화");
+          toolGroup.setToolActive(ZoomTool.toolName, {
+            bindings: [{ mouseButton: ToolEnums.MouseBindings.Primary }],
+          });
+          break;
+
+        case "flipH":
+          if (activeViewerId === id) {
+            handleFlip("horizontal");
+          }
+          break;
+
+        case "flipV":
+          if (activeViewerId === id) {
+            handleFlip("vertical");
+          }
+          break;
+
+        case "rotate30":
+          if (activeViewerId === id) {
+            handleRotate(30);
+          }
+          break;
+
+        default:
+          // 기본적으로 윈도우 레벨링 활성화
+          toolGroup.setToolActive(WindowLevelTool.toolName, {
+            bindings: [{ mouseButton: ToolEnums.MouseBindings.Primary }],
+          });
+          break;
       }
 
-      // 스크롤 기능 유지
+      // 스크롤 기능은 항상 유지
       toolGroup.setToolActive(StackScrollTool.toolName, {
-        bindings: [
-          {
-            mouseButton: ToolEnums.MouseBindings.Secondary,
-          },
-        ],
+        bindings: [{ mouseButton: ToolEnums.MouseBindings.Secondary }],
       });
     } catch (error) {
       console.error("도구 변경 오류:", error);
@@ -220,14 +281,38 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
     activeMode,
     toolGroupId,
     isInitialized,
-    setActiveMode,
-    viewport,
-    activeViewerId,
     id,
+    activeViewerId,
+    handleFlip,
+    handleRotate,
   ]);
 
+  // 코너스톤 초기화
+  useEffect(() => {
+    initializeCornerstone();
+  }, [initializeCornerstone]);
+
+  // 뷰포트 설정
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    (async () => {
+      const newViewport = await setupViewport();
+      if (newViewport) {
+        setViewport(newViewport);
+      }
+    })();
+
+    return cleanupRenderingEngine;
+  }, [isInitialized, setupViewport, cleanupRenderingEngine]);
+
+  // 도구 상태 업데이트
+  useEffect(() => {
+    updateActiveTool();
+  }, [updateActiveTool]);
+
   return (
-    <button className="w-full h-full" onFocus={() => setActiveViewerId?.(id)}>
+    <button className="w-full h-full" onFocus={() => setActiveViewerId(id)}>
       <div
         ref={containerRef}
         style={{
@@ -236,9 +321,9 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
           backgroundColor: "#000",
         }}
         className={`
-    ${activeMode === "zoom" ? "cursor-zoom-in" : "cursor-default"}
-    ${activeViewerId === id ? "border-4 border-blue-500" : "border-0"}
-  `}
+          ${activeMode === "zoom" ? "cursor-zoom-in" : "cursor-default"}
+          ${activeViewerId === id ? "border-4 border-blue-500" : "border-0"}
+        `}
       ></div>
     </button>
   );
