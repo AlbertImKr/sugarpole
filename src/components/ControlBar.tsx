@@ -58,7 +58,12 @@ const ControlBar: React.FC<ControlBarProps> = ({
               setActiveMode(activeMode === "rotate30" ? "" : "rotate30")
             }
           />
-          <MenuItem text="Invert" />
+          <MenuItem
+            text="Invert"
+            onClick={() =>
+              setActiveMode(activeMode === "invert" ? "" : "invert")
+            }
+          />
           <MenuItem text="Apply Colormap" />
           <MenuItem text="Reset" />
         </div>
