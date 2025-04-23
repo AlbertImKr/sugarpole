@@ -203,7 +203,7 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
         console.error(`${direction} 플립 처리 중 오류:`, error);
       }
     },
-    [viewport, activeViewerId, id, setActiveMode],
+    [viewport, activeViewerId, id],
   );
 
   /**
