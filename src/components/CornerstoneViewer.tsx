@@ -279,7 +279,7 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
   /**
    * 도구 활성화 관리
    */
-  const updateActiveTool = useCallback(() => {
+  const updateActiveTool = useCallback(async () => {
     if (!isInitialized || !activeMode) return;
 
     const toolGroup = ToolGroupManager.getToolGroup(toolGroupId);
@@ -390,7 +390,9 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
 
   // 도구 상태 업데이트
   useEffect(() => {
-    updateActiveTool();
+    (async () => {
+      await updateActiveTool();
+    })();
   }, [updateActiveTool]);
 
   return (
