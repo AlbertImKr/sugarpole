@@ -77,12 +77,20 @@ const ControlBar: React.FC<ControlBarProps> = ({
             onClick={() => setActiveMode(activeMode === "reset" ? "" : "reset")}
           />
         </div>
-        <button className="bg-[#0F62FE] border-[#0F62FE] border-2 w-auto max-w-[174px] h-[48px] pt-4 pr-3 pb-4 pl-3 cursor-pointer hover:bg-blue-800 flex items-center justify-center">
+        <button
+          className="bg-[#0F62FE] border-[#0F62FE] border-2 w-auto max-w-[174px] h-[48px] pt-4 pr-3 pb-4 pl-3 cursor-pointer hover:bg-blue-800 flex items-center justify-center"
+          onClick={() =>
+            setActiveMode(activeMode === "previous" ? "" : "previous")
+          }
+        >
           <span className="font-roboto font-medium text-base leading-[100%] text-white text-center flex items-center justify-center w-[118px] h-[16px]">
             Previous Image
           </span>
         </button>
-        <button className="flex items-center justify-center bg-[#0F62FE] border-2 border-[#0F62FE] rounded cursor-pointer hover:bg-blue-800 h-[48px] w-auto max-w-[143px]">
+        <button
+          className="flex items-center justify-center bg-[#0F62FE] border-2 border-[#0F62FE] rounded cursor-pointer hover:bg-blue-800 h-[48px] w-auto max-w-[143px]"
+          onClick={() => setActiveMode(activeMode === "next" ? "" : "next")}
+        >
           <span className="font-roboto font-medium text-base leading-[100%] text-white text-center flex items-center justify-center w-[118px] h-[16px]">
             Next Image
           </span>
