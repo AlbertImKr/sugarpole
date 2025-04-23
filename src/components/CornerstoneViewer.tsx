@@ -277,6 +277,21 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
   }, [viewport, activeViewerId, id]);
 
   /**
+   * 다음 DICOM 이미지로 이동
+   */
+  const handleNextImage = useCallback(async () => {
+    if (viewport && activeViewerId == id) {
+      const currentIndex = viewport.getCurrentImageIdIndex();
+      const newIndex = Math.min(
+        currentIndex + 1,
+        viewport.getNumberOfSlices() - 1,
+      );
+      await viewport.setImageIdIndex(newIndex);
+      viewport.render();
+    }
+  }, [viewport, activeViewerId, id]);
+
+  /**
    * 도구 활성화 관리
    */
   const updateActiveTool = useCallback(async () => {
@@ -334,6 +349,11 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
 
         case "previous":
           await handlePreviousImage();
+          setActiveMode("zoom");
+          break;
+
+        case "next":
+          await handleNextImage();
           setActiveMode("zoom");
           break;
 
