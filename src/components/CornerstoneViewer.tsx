@@ -19,14 +19,21 @@ import {
 
 interface CornerstoneViewerProps {
   id: string;
-  activeMode?: string;
+  activeMode: string;
+  setActiveMode: (mode: string) => void;
+  activeViewerId: string;
+  setActiveViewerId: (id: string) => void;
 }
 
 const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
   id,
   activeMode,
+  setActiveMode,
+  activeViewerId,
+  setActiveViewerId,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [viewport, setViewport] = useState<StackViewport | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const toolGroupId = `toolGroup-${id}`;
 
@@ -109,6 +116,7 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
           } catch (error) {
             console.error("도구 그룹 설정 오류:", error);
           }
+          setViewport(viewport);
         }
       } catch (error) {
         console.error("뷰포트 설정 오류:", error);
@@ -166,6 +174,26 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
             },
           ],
         });
+      } else if (activeMode === "flipH" && activeViewerId === id) {
+        // 수평 뒤집기 도구 활성화
+        if (!viewport) return;
+        const flipHorizontal = viewport.getCamera().flipHorizontal;
+        console.log("<UNK> <UNK>:", viewport.getCamera());
+        viewport.setCamera({
+          flipHorizontal: !flipHorizontal,
+        });
+        viewport.render();
+        setActiveMode("zoom");
+      } else if (activeMode === "flipV" && activeViewerId === id) {
+        // 수직 뒤집기 도구 활성화
+        if (!viewport) return;
+        const flipVertical = viewport.getCamera().flipVertical;
+        console.log("<UNK> <UNK>:", viewport.getCamera());
+        viewport.setCamera({
+          flipVertical: !flipVertical,
+        });
+        viewport.render();
+        setActiveMode("zoom");
       } else {
         // 기본적으로 윈도우 레벨링 활성화
         toolGroup.setToolActive(WindowLevelTool.toolName, {
@@ -188,10 +216,18 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
     } catch (error) {
       console.error("도구 변경 오류:", error);
     }
-  }, [activeMode, toolGroupId, isInitialized]);
+  }, [
+    activeMode,
+    toolGroupId,
+    isInitialized,
+    setActiveMode,
+    viewport,
+    activeViewerId,
+    id,
+  ]);
 
   return (
-    <div className="w-full h-full">
+    <button className="w-full h-full" onFocus={() => setActiveViewerId?.(id)}>
       <div
         ref={containerRef}
         style={{
@@ -199,9 +235,12 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
           height: "100%",
           backgroundColor: "#000",
         }}
-        className={activeMode === "zoom" ? "cursor-zoom-in" : "cursor-default"}
+        className={`
+    ${activeMode === "zoom" ? "cursor-zoom-in" : "cursor-default"}
+    ${activeViewerId === id ? "border-4 border-blue-500" : "border-0"}
+  `}
       ></div>
-    </div>
+    </button>
   );
 };
 
