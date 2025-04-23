@@ -203,7 +203,7 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
         console.error(`${direction} 플립 처리 중 오류:`, error);
       }
     },
-    [viewport, activeViewerId, id, setActiveMode],
+    [viewport, activeViewerId, id],
   );
 
   /**
@@ -239,6 +239,32 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
   }, [viewport, activeViewerId, id]);
 
   /**
+   * 컬러맵 적용
+   */
+  const handleApplyColormap = useCallback(() => {
+    if (viewport && activeViewerId == id) {
+      viewport.setProperties({
+        colormap: {
+          name: "hsv",
+        },
+      });
+      viewport.render();
+      viewport.render();
+    }
+  }, [viewport, activeViewerId, id]);
+
+  /**
+   * 리셋
+   */
+  const handleResetCamera = useCallback(() => {
+    if (viewport && activeViewerId == id) {
+      viewport.resetCamera();
+      viewport.resetProperties();
+      viewport.render();
+    }
+  }, [viewport, activeViewerId, id]);
+
+  /**
    * 도구 활성화 관리
    */
   const updateActiveTool = useCallback(() => {
@@ -246,6 +272,9 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
 
     const toolGroup = ToolGroupManager.getToolGroup(toolGroupId);
     if (!toolGroup) return;
+    if (activeViewerId !== id) {
+      return;
+    }
 
     try {
       // 활성 도구 설정
@@ -258,30 +287,36 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
           break;
 
         case "flipH":
-          if (activeViewerId === id) {
-            handleFlip("horizontal");
-          }
+          handleFlip("horizontal");
           setActiveMode("zoom");
           break;
 
         case "flipV":
-          if (activeViewerId === id) {
-            handleFlip("vertical");
-          }
+          handleFlip("vertical");
+
           setActiveMode("zoom");
           break;
 
         case "rotate30":
-          if (activeViewerId === id) {
-            handleRotate(30);
-          }
+          handleRotate(30);
+
           setActiveMode("zoom");
           break;
 
         case "invert":
-          if (activeViewerId === id) {
-            handleInvert();
-          }
+          handleInvert();
+
+          setActiveMode("zoom");
+          break;
+
+        case "applyColormap":
+          handleApplyColormap();
+
+          setActiveMode("zoom");
+          break;
+
+        case "reset":
+          handleResetCamera();
           setActiveMode("zoom");
           break;
 
@@ -301,13 +336,17 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
       console.error("도구 변경 오류:", error);
     }
   }, [
+    isInitialized,
     activeMode,
     toolGroupId,
-    isInitialized,
-    id,
     activeViewerId,
+    id,
+    setActiveMode,
     handleFlip,
     handleRotate,
+    handleInvert,
+    handleApplyColormap,
+    handleResetCamera,
   ]);
 
   // 코너스톤 초기화
