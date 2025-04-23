@@ -265,6 +265,18 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
   }, [viewport, activeViewerId, id]);
 
   /**
+   * 이전 DICOM 이미지로 돌아가기
+   */
+  const handlePreviousImage = useCallback(async () => {
+    if (viewport && activeViewerId == id) {
+      const currentIndex = viewport.getCurrentImageIdIndex();
+      const newIndex = Math.max(currentIndex - 1, 0);
+      await viewport.setImageIdIndex(newIndex);
+      viewport.render();
+    }
+  }, [viewport, activeViewerId, id]);
+
+  /**
    * 도구 활성화 관리
    */
   const updateActiveTool = useCallback(() => {
@@ -320,6 +332,11 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
           setActiveMode("zoom");
           break;
 
+        case "previous":
+          await handlePreviousImage();
+          setActiveMode("zoom");
+          break;
+
         default:
           // 기본적으로 윈도우 레벨링 활성화
           toolGroup.setToolActive(WindowLevelTool.toolName, {
@@ -341,17 +358,20 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
     toolGroupId,
     activeViewerId,
     id,
-    setActiveMode,
     handleFlip,
+    setActiveMode,
     handleRotate,
     handleInvert,
     handleApplyColormap,
     handleResetCamera,
+    handlePreviousImage,
   ]);
 
   // 코너스톤 초기화
   useEffect(() => {
-    initializeCornerstone();
+    (async () => {
+      await initializeCornerstone();
+    })();
   }, [initializeCornerstone]);
 
   // 뷰포트 설정
