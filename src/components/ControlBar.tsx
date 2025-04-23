@@ -64,7 +64,14 @@ const ControlBar: React.FC<ControlBarProps> = ({
               setActiveMode(activeMode === "invert" ? "" : "invert")
             }
           />
-          <MenuItem text="Apply Colormap" />
+          <MenuItem
+            text="Apply Colormap"
+            onClick={() =>
+              setActiveMode(
+                activeMode === "applyColormap" ? "" : "applyColormap",
+              )
+            }
+          />
           <MenuItem text="Reset" />
         </div>
         <button className="bg-[#0F62FE] border-[#0F62FE] border-2 w-auto max-w-[174px] h-[48px] pt-4 pr-3 pb-4 pl-3 cursor-pointer hover:bg-blue-800 flex items-center justify-center">

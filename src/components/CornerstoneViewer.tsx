@@ -239,6 +239,21 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
   }, [viewport, activeViewerId, id]);
 
   /**
+   * 컬러맵 적용
+   */
+  const handleApplyColormap = useCallback(() => {
+    if (viewport && activeViewerId == id) {
+      viewport.setProperties({
+        colormap: {
+          name: "hsv",
+        },
+      });
+      viewport.render();
+      viewport.render();
+    }
+  }, [viewport, activeViewerId, id]);
+
+  /**
    * 도구 활성화 관리
    */
   const updateActiveTool = useCallback(() => {
@@ -281,6 +296,13 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
         case "invert":
           if (activeViewerId === id) {
             handleInvert();
+          }
+          setActiveMode("zoom");
+          break;
+
+        case "applyColormap":
+          if (activeViewerId === id) {
+            handleApplyColormap();
           }
           setActiveMode("zoom");
           break;
