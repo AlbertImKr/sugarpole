@@ -123,7 +123,9 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
     return () => {
       try {
         // 도구 그룹 제거
-        ToolGroupManager.getToolGroup(toolGroupId)?.destroy();
+        if (ToolGroupManager.getToolGroup(toolGroupId)) {
+          ToolGroupManager.destroyToolGroup(toolGroupId);
+        }
 
         // 렌더링 엔진 제거
         if (renderingEngine) {
