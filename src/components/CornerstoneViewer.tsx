@@ -16,7 +16,6 @@ import {
   WindowLevelTool,
   ZoomTool,
 } from "@cornerstonejs/tools";
-import IToolGroup from "@cornerstonejs/tools/types/IToolGroup";
 
 interface CornerstoneViewerProps {
   id: string;
@@ -30,7 +29,6 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const toolGroupId = `toolGroup-${id}`;
-  const toolGroupRef = useRef<IToolGroup>(null);
 
   // Cornerstone 라이브러리 초기화
   useEffect(() => {
@@ -100,7 +98,7 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
           // 도구 그룹 설정
           try {
             // 새 도구 그룹 생성
-            const toolGroup = ToolGroupManager.createToolGroup(toolGroupId);
+            const toolGroup = ToolGroupManager.createToolGroup(toolGroupId)!;
             toolGroup.addViewport(viewportId, renderingEngine.id);
 
             // 기본 도구 추가
@@ -108,8 +106,6 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
             toolGroup.addTool(WindowLevelTool.toolName);
             toolGroup.addTool(StackScrollTool.toolName);
             console.log("도구 그룹 생성:", toolGroup);
-
-            toolGroupRef.current = toolGroup;
           } catch (error) {
             console.error("도구 그룹 설정 오류:", error);
           }
@@ -127,9 +123,7 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
     return () => {
       try {
         // 도구 그룹 제거
-        if (toolGroupRef.current) {
-          ToolGroupManager.destroyToolGroup(toolGroupId);
-        }
+        ToolGroupManager.getToolGroup(toolGroupId)?.destroy();
 
         // 렌더링 엔진 제거
         if (renderingEngine) {
@@ -150,11 +144,12 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
 
   // 도구 변경 처리
   useEffect(() => {
-    if (!isInitialized || !activeMode || !toolGroupRef.current) return;
+    const toolGroupRef = ToolGroupManager.getToolGroup(toolGroupId)!;
+    if (!isInitialized || !activeMode || !toolGroupRef) return;
     console.log("도구 변경:", activeMode);
 
     try {
-      const toolGroup = toolGroupRef.current;
+      const toolGroup = toolGroupRef;
       console.log("<UNK> <UNK>:", toolGroup);
       if (!toolGroup) return;
 
