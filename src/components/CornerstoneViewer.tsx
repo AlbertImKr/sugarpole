@@ -254,6 +254,17 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
   }, [viewport, activeViewerId, id]);
 
   /**
+   * 리셋
+   */
+  const handleResetCamera = useCallback(() => {
+    if (viewport && activeViewerId == id) {
+      viewport.resetCamera();
+      viewport.resetProperties();
+      viewport.render();
+    }
+  }, [viewport, activeViewerId, id]);
+
+  /**
    * 도구 활성화 관리
    */
   const updateActiveTool = useCallback(() => {
@@ -303,6 +314,13 @@ const CornerstoneViewer: React.FC<CornerstoneViewerProps> = ({
         case "applyColormap":
           if (activeViewerId === id) {
             handleApplyColormap();
+          }
+          setActiveMode("zoom");
+          break;
+
+        case "reset":
+          if (activeViewerId === id) {
+            handleResetCamera();
           }
           setActiveMode("zoom");
           break;
